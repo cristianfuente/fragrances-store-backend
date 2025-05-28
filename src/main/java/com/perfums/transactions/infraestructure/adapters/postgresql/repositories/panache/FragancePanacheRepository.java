@@ -2,8 +2,46 @@ package com.perfums.transactions.infraestructure.adapters.postgresql.repositorie
 
 import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.Fragrance;
 import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
+
+import java.util.List;
+import java.util.Set;
 
 @ApplicationScoped
 public class FragancePanacheRepository implements PanacheRepositoryBase<Fragrance, Long> {
+
+    public Uni<List<Fragrance>> findByFilters(Set<Long> filterIds, String searchText) {
+        StringBuilder queryBuilder = new StringBuilder("""
+            SELECT DISTINCT f FROM Fragrance f
+            LEFT JOIN f.catalogParameters cp
+        """);
+
+        boolean hasFilters = filterIds != null && !filterIds.isEmpty();
+        boolean hasSearch = searchText != null && !searchText.isBlank();
+
+        if (hasFilters || hasSearch) {
+            queryBuilder.append(" WHERE ");
+        }
+
+        if (hasFilters) {
+            queryBuilder.append(" cp.id IN :filterIds ");
+        }
+
+        if (hasFilters && hasSearch) {
+            queryBuilder.append(" AND ");
+        }
+
+        if (hasSearch) {
+            queryBuilder.append(" (LOWER(f.name) LIKE :text OR LOWER(f.description) LIKE :text) ");
+        }
+
+        return getSession().flatMap(session -> {
+            var query = session.createQuery(queryBuilder.toString(), Fragrance.class);
+            if (hasFilters) query.setParameter("filterIds", filterIds);
+            if (hasSearch) query.setParameter("text", "%" + searchText.toLowerCase() + "%");
+            return query.getResultList();
+        });
+    }
+
 }

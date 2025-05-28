@@ -2,6 +2,7 @@ package com.perfums.transactions.application.usecase.impl;
 
 import com.perfums.transactions.application.usecase.FragranceUseCase;
 import com.perfums.transactions.domain.dto.FraganceDTO;
+import com.perfums.transactions.domain.dto.FragranceFilterRequestDTO;
 import com.perfums.transactions.domain.repository.FragranceRepository;
 import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.Fragrance;
 import io.smallrye.mutiny.Uni;
@@ -18,8 +19,8 @@ public class FragranceUseCaseImpl implements FragranceUseCase {
     FragranceRepository fragranceRepository;
 
     @Override
-    public Uni<List<FraganceDTO>> getAllFragrances() {
-        return fragranceRepository.listAll()
+    public Uni<List<FraganceDTO>> getAllFragrances(FragranceFilterRequestDTO request) {
+        return fragranceRepository.findFiltered(request)
                 .onItem().transform(fragrances ->
                         fragrances.stream().map(this::toDTO).collect(Collectors.toList())
                 );

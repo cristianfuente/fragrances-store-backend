@@ -2,11 +2,13 @@ package com.perfums.transactions.presentation;
 
 import com.perfums.transactions.application.usecase.FragranceUseCase;
 import com.perfums.transactions.domain.dto.FraganceDTO;
+import com.perfums.transactions.domain.dto.FragranceFilterRequestDTO;
 import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -25,10 +27,10 @@ public class FraganceController {
     @Inject
     FragranceUseCase fragranceUseCase;
 
-    @GET
+    @POST
     @WithSession
-    public Uni<List<FraganceDTO>> getAll() {
-        return fragranceUseCase.getAllFragrances();
+    public Uni<List<FraganceDTO>> getAll(FragranceFilterRequestDTO request) {
+        return fragranceUseCase.getAllFragrances(request);
     }
 
     @GET
