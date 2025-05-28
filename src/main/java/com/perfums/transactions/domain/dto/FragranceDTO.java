@@ -7,11 +7,12 @@ import java.util.List;
 
 @Getter
 @Setter
-public class FraganceDTO {
+public class FragranceDTO {
 
     private Long id;
     private String name;
     private String description;
-    private List<FraganceSizeDTO> fraganceSizes;
+    private List<FragranceSizeDTO> sizes;
+    private List<CatalogParameterDTO> parameters;
 
 }

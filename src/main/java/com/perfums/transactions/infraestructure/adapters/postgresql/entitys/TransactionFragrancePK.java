@@ -13,6 +13,7 @@ import java.util.Objects;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TransactionFragrancePK implements Serializable {
+
     private Long transactionId;
     private Long fragranceId;
     private Long sizeId;

@@ -1,5 +1,6 @@
 package com.perfums.transactions.infraestructure.adapters.postgresql.entitys;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -9,6 +10,8 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.util.Set;
 
@@ -29,6 +32,10 @@ public class CatalogParameter {
     private String description;
 
     @ManyToMany(mappedBy = "catalogParameters")
+    @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Set<Fragrance> fragrances;
+
 
 }

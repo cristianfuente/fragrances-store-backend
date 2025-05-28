@@ -10,4 +10,7 @@ import java.util.List;
 public class FragranceFilterRequestDTO {
     private List<CatalogParameterDTO> filters;
     private String searchText;
-}   
+    private Integer page;
+    private Integer size;
+    private String apiKey;
+}

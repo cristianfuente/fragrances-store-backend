@@ -1,7 +1,7 @@
 package com.perfums.transactions.presentation;
 
 import com.perfums.transactions.application.usecase.FragranceUseCase;
-import com.perfums.transactions.domain.dto.FraganceDTO;
+import com.perfums.transactions.domain.dto.FragranceDTO;
 import com.perfums.transactions.domain.dto.FragranceFilterRequestDTO;
 import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.smallrye.mutiny.Uni;
@@ -29,8 +29,10 @@ public class FraganceController {
 
     @POST
     @WithSession
-    public Uni<List<FraganceDTO>> getAll(FragranceFilterRequestDTO request) {
-        return fragranceUseCase.getAllFragrances(request);
+    public Uni<Response> getAll(FragranceFilterRequestDTO request) {
+        return fragranceUseCase.getAllFragrances(request)
+                .map(Response::ok)
+                .map(Response.ResponseBuilder::build);
     }
 
     @GET

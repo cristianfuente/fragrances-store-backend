@@ -11,6 +11,7 @@ import jakarta.inject.Inject;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -31,8 +32,23 @@ public class FragranceRepositoryAdapter implements FragranceRepository {
                 : Set.of();
 
         String search = request != null ? request.getSearchText() : null;
+        int page = Optional.ofNullable(request.getPage()).orElse(0);
+        int size = Optional.ofNullable(request.getSize()).orElse(10);
 
-        return panacheRepo.findByFilters(ids, search);
+        return panacheRepo.findByFilters(ids, search, page, size);
+    }
+
+    @Override
+    public Uni<Long> countFiltered(List<CatalogParameterDTO> filters, String searchText) {
+        Set<Long> ids = filters != null
+                ? filters.stream()
+                .filter(Objects::nonNull)
+                .map(CatalogParameterDTO::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet())
+                : Set.of();
+
+        return panacheRepo.countFiltered(ids, searchText);
     }
 
     @Override

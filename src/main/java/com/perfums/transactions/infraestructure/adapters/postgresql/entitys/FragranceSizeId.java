@@ -1,30 +1,41 @@
 package com.perfums.transactions.infraestructure.adapters.postgresql.entitys;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.io.Serializable;
 import java.util.Objects;
 
+@Embeddable
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class FragranceSizeId implements Serializable {
 
-    private Long size;
-    private Long fragrance;
+    @Column(name = "id_size")
+    private Long sizeId;
 
-    public FragranceSizeId() {}
-
-    public FragranceSizeId(Long size, Long fragrance) {
-        this.size = size;
-        this.fragrance = fragrance;
-    }
+    @Column(name = "id_fragrance")
+    private Long fragranceId;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof FragranceSizeId)) return false;
         FragranceSizeId that = (FragranceSizeId) o;
-        return Objects.equals(size, that.size) && Objects.equals(fragrance, that.fragrance);
+        return Objects.equals(fragranceId, that.fragranceId)
+                && Objects.equals(sizeId, that.sizeId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(size, fragrance);
+        return Objects.hash(fragranceId, sizeId);
     }
+
 }
+

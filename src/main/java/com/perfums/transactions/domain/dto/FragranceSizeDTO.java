@@ -1,0 +1,17 @@
+package com.perfums.transactions.domain.dto;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class FragranceSizeDTO {
+    private Long sizeId;
+    private String unit;
+    private String label;
+    private Double size;
+    private Double originalPrice;
+    private Double price;
+    private Integer stock;
+    private String imageUrl;
+}
