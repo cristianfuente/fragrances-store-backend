@@ -21,8 +21,7 @@ public class TransactionFragrancePK implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof TransactionFragrancePK)) return false;
-        TransactionFragrancePK that = (TransactionFragrancePK) o;
+        if (!(o instanceof TransactionFragrancePK that)) return false;
         return Objects.equals(transactionId, that.transactionId)
                 && Objects.equals(fragranceId, that.fragranceId)
                 && Objects.equals(sizeId, that.sizeId);

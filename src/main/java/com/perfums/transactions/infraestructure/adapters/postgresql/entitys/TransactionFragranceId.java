@@ -8,7 +8,8 @@ public class TransactionFragranceId implements Serializable {
     private Long transaction;
     private Long fragranceSize;
 
-    public TransactionFragranceId() {}
+    public TransactionFragranceId() {
+    }
 
     public TransactionFragranceId(Long transaction, Long fragranceSize) {
         this.transaction = transaction;
@@ -18,8 +19,7 @@ public class TransactionFragranceId implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof TransactionFragranceId)) return false;
-        TransactionFragranceId that = (TransactionFragranceId) o;
+        if (!(o instanceof TransactionFragranceId that)) return false;
         return Objects.equals(transaction, that.transaction) &&
                 Objects.equals(fragranceSize, that.fragranceSize);
     }

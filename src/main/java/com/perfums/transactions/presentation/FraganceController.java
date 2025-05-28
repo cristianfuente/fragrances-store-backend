@@ -1,7 +1,6 @@
 package com.perfums.transactions.presentation;
 
 import com.perfums.transactions.application.usecase.FragranceUseCase;
-import com.perfums.transactions.domain.dto.FragranceDTO;
 import com.perfums.transactions.domain.dto.FragranceFilterRequestDTO;
 import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.smallrye.mutiny.Uni;
@@ -15,8 +14,6 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
 
 @Slf4j
 @Path("/fragrances")

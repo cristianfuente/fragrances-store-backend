@@ -13,11 +13,11 @@ public class FragancePanacheRepository implements PanacheRepositoryBase<Fragranc
 
     public Uni<List<Fragrance>> findByFilters(Set<Long> filterIds, String searchText, int page, int size) {
         StringBuilder queryBuilder = new StringBuilder("""
-        SELECT DISTINCT f FROM Fragrance f
-        LEFT JOIN FETCH f.sizes fs
-        LEFT JOIN FETCH fs.size s
-        LEFT JOIN FETCH f.catalogParameters cp
-    """);
+                    SELECT DISTINCT f FROM Fragrance f
+                    LEFT JOIN FETCH f.sizes fs
+                    LEFT JOIN FETCH fs.size s
+                    LEFT JOIN FETCH f.catalogParameters cp
+                """);
 
         boolean hasFilters = filterIds != null && !filterIds.isEmpty();
         boolean hasSearch = searchText != null && !searchText.isBlank();
@@ -55,9 +55,9 @@ public class FragancePanacheRepository implements PanacheRepositoryBase<Fragranc
 
     public Uni<Long> countFiltered(Set<Long> filterIds, String searchText) {
         StringBuilder queryBuilder = new StringBuilder("""
-            SELECT COUNT(DISTINCT f) FROM Fragrance f
-            LEFT JOIN f.catalogParameters cp
-        """);
+                    SELECT COUNT(DISTINCT f) FROM Fragrance f
+                    LEFT JOIN f.catalogParameters cp
+                """);
 
         boolean hasFilters = filterIds != null && !filterIds.isEmpty();
         boolean hasSearch = searchText != null && !searchText.isBlank();

@@ -26,8 +26,7 @@ public class FragranceSizeId implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof FragranceSizeId)) return false;
-        FragranceSizeId that = (FragranceSizeId) o;
+        if (!(o instanceof FragranceSizeId that)) return false;
         return Objects.equals(fragranceId, that.fragranceId)
                 && Objects.equals(sizeId, that.sizeId);
     }

@@ -21,8 +21,7 @@ public class CatalogParameterFragranceId implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof CatalogParameterFragranceId)) return false;
-        CatalogParameterFragranceId that = (CatalogParameterFragranceId) o;
+        if (!(o instanceof CatalogParameterFragranceId that)) return false;
         return Objects.equals(fragrance, that.fragrance)
                 && Objects.equals(catalog, that.catalog)
                 && Objects.equals(catalogParameter, that.catalogParameter);
