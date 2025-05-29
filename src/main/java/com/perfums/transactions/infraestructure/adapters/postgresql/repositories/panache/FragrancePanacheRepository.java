@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 @ApplicationScoped
-public class FragancePanacheRepository implements PanacheRepositoryBase<Fragrance, Long> {
+public class FragrancePanacheRepository implements PanacheRepositoryBase<Fragrance, Long> {
 
     public Uni<List<Fragrance>> findByFilters(Set<Long> filterIds, String searchText, int page, int size) {
         StringBuilder queryBuilder = new StringBuilder("""

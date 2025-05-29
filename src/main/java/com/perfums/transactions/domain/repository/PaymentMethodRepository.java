@@ -9,4 +9,6 @@ public interface PaymentMethodRepository {
 
     Uni<List<PaymentMethod>> findAll();
 
+    Uni<PaymentMethod> findById(Long id);
+
 }

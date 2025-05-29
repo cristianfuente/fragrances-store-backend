@@ -1,5 +1,6 @@
 package com.perfums.transactions.infraestructure.adapters.postgresql.entitys;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,8 +15,11 @@ import java.util.Objects;
 @NoArgsConstructor
 public class TransactionFragrancePK implements Serializable {
 
+    @Column(name = "id_transaction")
     private Long transactionId;
+    @Column(name = "id_fragrance")
     private Long fragranceId;
+    @Column(name = "id_size")
     private Long sizeId;
 
     @Override

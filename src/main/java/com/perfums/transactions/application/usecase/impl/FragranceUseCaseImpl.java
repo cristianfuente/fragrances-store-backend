@@ -71,11 +71,10 @@ public class FragranceUseCaseImpl implements FragranceUseCase {
 
         List<FragranceSizeDTO> sizes = fragrance.getSizes().stream().map(fs -> {
             Size size = fs.getSize();
-            Double originalPrice = fs.getPrice();
+            BigDecimal originalPrice = fs.getPrice();
 
-            BigDecimal originalPriceDecimal = BigDecimal.valueOf(fs.getPrice());
-            BigDecimal priceWithMargin = originalPriceDecimal
-                    .add(originalPriceDecimal.multiply(BigDecimal.valueOf(margin)));
+            BigDecimal priceWithMargin = originalPrice
+                    .add(originalPrice.multiply(BigDecimal.valueOf(margin)));
 
             FragranceSizeDTO sizeDTO = new FragranceSizeDTO();
             sizeDTO.setSizeId(size.getId());

@@ -4,7 +4,7 @@ import com.perfums.transactions.domain.dto.CatalogParameterDTO;
 import com.perfums.transactions.domain.dto.FragranceFilterRequestDTO;
 import com.perfums.transactions.domain.repository.FragranceRepository;
 import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.Fragrance;
-import com.perfums.transactions.infraestructure.adapters.postgresql.repositories.panache.FragancePanacheRepository;
+import com.perfums.transactions.infraestructure.adapters.postgresql.repositories.panache.FragrancePanacheRepository;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class FragranceRepositoryAdapter implements FragranceRepository {
 
     @Inject
-    FragancePanacheRepository panacheRepo;
+    FragrancePanacheRepository panacheRepo;
 
     @Override
     public Uni<List<Fragrance>> findFiltered(FragranceFilterRequestDTO request) {

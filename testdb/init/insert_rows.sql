@@ -73,3 +73,4 @@ INSERT INTO transactions_fragrances_history (
 ) VALUES
 (1, 1, 1, 'Ocean Breeze', 'ml', 50, 2, 19.99, 19.99, 100, 98, 'Histórico pedido 1'),
 (1, 2, 2, 'Vanilla Dream', 'ml', 50, 1, 24.99, 24.99, 80, 79, 'Histórico pedido 2');
+

@@ -9,6 +9,8 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "fragrances_sizes")
 @Data
@@ -28,7 +30,7 @@ public class FragranceSize {
     private Size size;
 
     @Column(name = "price")
-    private Double price;
+    private BigDecimal price;
 
     @Column(name = "stock")
     private Integer stock;

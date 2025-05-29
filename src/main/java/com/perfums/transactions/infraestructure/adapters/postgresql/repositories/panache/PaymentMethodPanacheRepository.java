@@ -1,4 +1,4 @@
-package com.perfums.transactions.infraestructure.adapters.postgresql.repositories;
+package com.perfums.transactions.infraestructure.adapters.postgresql.repositories.panache;
 
 import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.PaymentMethod;
 import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;

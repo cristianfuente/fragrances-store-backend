@@ -1,5 +1,6 @@
 CREATE TYPE state_types as ENUM (
     'WAITING_PAYMENTS',
+    'PAYMENT_IN_PROCESS',
     'EXPIRED',
     'PAID',
     'ERROR',
@@ -147,5 +148,4 @@ CREATE TABLE transactions_fragrances_history (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     additional TEXT
 );
-
 

@@ -1,6 +1,7 @@
 package com.perfums.transactions.infraestructure.adapters.postgresql.entitys;
 
 import com.perfums.transactions.domain.models.StateType;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -10,10 +11,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "transactions")
@@ -36,7 +41,7 @@ public class Transaction {
     private StateType state;
 
     @Column(name = "total_payment")
-    private Double totalPayment;
+    private BigDecimal totalPayment;
 
     @Column(name = "create_at")
     private LocalDateTime createAt;
@@ -44,4 +49,8 @@ public class Transaction {
     private String email;
     private String address;
     private String code;
+
+    @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TransactionFragrance> fragrances = new ArrayList<>();
+
 }
