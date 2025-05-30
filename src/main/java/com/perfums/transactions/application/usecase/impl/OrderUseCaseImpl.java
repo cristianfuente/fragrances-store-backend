@@ -1,5 +1,6 @@
 package com.perfums.transactions.application.usecase.impl;
 
+import com.perfums.transactions.application.service.TransactionSchedulerService;
 import com.perfums.transactions.application.usecase.OrderUseCase;
 import com.perfums.transactions.domain.dto.OrderProductDTO;
 import com.perfums.transactions.domain.dto.OrderRequestDTO;
@@ -12,11 +13,13 @@ import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.Frag
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Random;
 
+@Slf4j
 @ApplicationScoped
 public class OrderUseCaseImpl implements OrderUseCase {
 
@@ -31,6 +34,9 @@ public class OrderUseCaseImpl implements OrderUseCase {
 
     @Inject
     FragranceSizeRepository fragranceSizeRepository;
+
+    @Inject
+    TransactionSchedulerService schedulerService;
 
     @Override
     public Uni<OrderResponseDTO> processOrder(OrderRequestDTO request) {
@@ -56,7 +62,9 @@ public class OrderUseCaseImpl implements OrderUseCase {
                                                                     paymentMethod,
                                                                     code,
                                                                     total
-                                                            ).map(tx -> {
+                                                            ).invoke(transaction -> schedulerService
+                                                                            .scheduleCancellation(transaction.getId()))
+                                                                    .map(transaction -> {
                                                                 OrderResponseDTO response = new OrderResponseDTO();
                                                                 response.setCode(code);
                                                                 return response;

@@ -19,4 +19,9 @@ public interface TransactionRepository{
             String code,
             BigDecimal totalPayment
     );
+
+    Uni<Void> cancelTransactionAndRestoreStock(Long transactionId);
+
+    Uni<Transaction> findById(Long idTransaction);
+
 }

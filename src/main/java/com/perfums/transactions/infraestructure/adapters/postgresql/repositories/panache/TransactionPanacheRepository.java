@@ -2,9 +2,12 @@ package com.perfums.transactions.infraestructure.adapters.postgresql.repositorie
 
 import com.perfums.transactions.domain.dto.OrderProductDTO;
 import com.perfums.transactions.domain.dto.OrderRequestDTO;
+import com.perfums.transactions.domain.dto.TransactionFragranceDTO;
 import com.perfums.transactions.domain.models.StateType;
 import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.Client;
 import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.Fragrance;
+import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.FragranceSize;
+import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.FragranceSizeId;
 import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.PaymentMethod;
 import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.Size;
 import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.Transaction;
@@ -13,6 +16,7 @@ import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.Tran
 import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.LockModeType;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

@@ -35,7 +35,7 @@ public class FragranceSizePanacheRepository implements PanacheRepositoryBase<Fra
                 .getSingleResult()
                 .onItem().transformToUni(fs -> {
                     if (fs.getStock() < product.getQuantity()) {
-                        return Uni.createFrom().failure(new IllegalStateException("Stock insuficiente para " + id));
+                        return Uni.createFrom().failure(new IllegalStateException("Stock insuficiente"));
                     }
 
                     fs.setStock(fs.getStock() - product.getQuantity());

@@ -1,9 +1,9 @@
 package com.perfums.transactions.presentation;
 
 import com.perfums.transactions.application.usecase.OrderUseCase;
-import com.perfums.transactions.domain.dto.FragranceFilterRequestDTO;
+import com.perfums.transactions.domain.dto.ErrorDTO;
 import com.perfums.transactions.domain.dto.OrderRequestDTO;
-import io.quarkus.hibernate.reactive.panache.common.WithSession;
+import com.perfums.transactions.domain.repository.TransactionRepository;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
@@ -24,12 +24,20 @@ public class OrderController {
     @Inject
     OrderUseCase orderUseCase;
 
+    @Inject
+    TransactionRepository repository;
+
     @POST
     @WithTransaction
     public Uni<Response> createOrder(OrderRequestDTO request) {
         return orderUseCase.processOrder(request)
                 .map(Response::ok)
-                .map(Response.ResponseBuilder::build);
+                .map(Response.ResponseBuilder::build)
+                .onFailure()
+                .recoverWithItem(throwable -> Response
+                        .status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity(new ErrorDTO(throwable.getMessage()))
+                        .build());
     }
 
 }
