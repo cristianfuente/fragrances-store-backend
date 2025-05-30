@@ -24,6 +24,7 @@ import jakarta.inject.Inject;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @ApplicationScoped
 public class TransactionRepositoryAdapter implements TransactionRepository {
@@ -75,7 +76,12 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
                                                     .setStock(fragranceSize.getStock() + transactionFragrance.getQuantity()));
                                 }).onItem().transformToUniAndConcatenate(fragranceSize -> {
                                             items.add(new EmailTemplateBuilderService.ProductItem(fragranceSize.getImageId(),
-                                                    fragranceSize.getFragrance().getName(), fragranceSize.getPrice().toString()));
+                                                    fragranceSize.getFragrance().getName(), fragrances
+                                                    .stream()
+                                                    .filter(fr -> Objects.equals(fr.getId().getFragranceId(), fragranceSize.getFragrance().getId()))
+                                                    .findFirst()
+                                                    .get().getQuantity().toString()
+                                            ));
                                             return fragranceSizePanacheRepository
                                                     .update("stock = ?1 where id.fragranceId = ?2 and id.sizeId = ?3", fragranceSize.getStock(),
                                                             fragranceSize.getFragrance().getId(), fragranceSize.getSize().getId());

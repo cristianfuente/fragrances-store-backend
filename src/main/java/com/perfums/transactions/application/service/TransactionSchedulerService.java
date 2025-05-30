@@ -28,7 +28,7 @@ public class TransactionSchedulerService {
     public void scheduleCancellation(Long transactionId) {
         log.info("Programando verificación de transacción {}", transactionId);
 
-        vertx.setTimer(TimeUnit.SECONDS.toMillis(20), id -> {
+        vertx.setTimer(TimeUnit.MINUTES.toMillis(5), id -> {
             log.info("Ejecutando verificación de transacción {}", transactionId);
 
             vertx.runOnContext(ignored -> transactionRepository.findById(transactionId)

@@ -17,7 +17,7 @@ public class EmailTemplateBuilderService {
                     .append(product.getImageUrl())
                     .append("\"></td>")
                     .append("<td>").append(product.getDescription()).append("</td>")
-                    .append("<td>").append(product.getPrice()).append("</td>")
+                    .append("<td>").append(product.getQuantity()).append("</td>")
                     .append("</tr>");
         }
 
@@ -50,7 +50,7 @@ public class EmailTemplateBuilderService {
                             <tr>
                                 <th style="width:60px">Imagen</th>
                                 <th>Descripción</th>
-                                <th>Precio</th>
+                                <th>Cantidad</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -65,17 +65,17 @@ public class EmailTemplateBuilderService {
     public static class ProductItem {
         private final String imageUrl;
         private final String description;
-        private final String price;
+        private final String quantity;
 
-        public ProductItem(String imageUrl, String description, String price) {
+        public ProductItem(String imageUrl, String description, String quantity) {
             this.imageUrl = imageUrl;
             this.description = description;
-            this.price = price;
+            this.quantity = quantity;
         }
 
         public String getImageUrl() { return imageUrl; }
         public String getDescription() { return description; }
-        public String getPrice() { return price; }
+        public String getQuantity() { return quantity; }
     }
 
 }
