@@ -1,13 +1,13 @@
 package com.perfums.transactions.application.service;
 
 import com.perfums.transactions.domain.models.StateType;
-import com.perfums.transactions.domain.repository.EmailRepository;
 import com.perfums.transactions.domain.repository.TransactionRepository;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.Vertx;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.concurrent.TimeUnit;
 
@@ -19,16 +19,15 @@ public class TransactionSchedulerService {
     TransactionRepository transactionRepository;
 
     @Inject
-    EmailRepository emailRepository;
-
-    @Inject
     Vertx vertx;
 
+    @ConfigProperty(name = "payment.session.duration.seconds")
+    String sessionDuration;
 
     public void scheduleCancellation(Long transactionId) {
         log.info("Programando verificación de transacción {}", transactionId);
 
-        vertx.setTimer(TimeUnit.MINUTES.toMillis(5), id -> {
+        vertx.setTimer(TimeUnit.SECONDS.toMillis(Long.parseLong(sessionDuration)), id -> {
             log.info("Ejecutando verificación de transacción {}", transactionId);
 
             vertx.runOnContext(ignored -> transactionRepository.findById(transactionId)

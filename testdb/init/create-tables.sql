@@ -16,7 +16,7 @@ CREATE TABLE clients (
     margin NUMERIC,
     status VARCHAR(50),
     code VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Tabla: payment_methods
@@ -98,7 +98,7 @@ CREATE TABLE transactions (
     id_payment_method INTEGER REFERENCES payment_methods(id),
     state state_types NOT NULL,
     total_payment NUMERIC,
-    create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    create_at TIMESTAMP DEFAULT NOW(),
     email VARCHAR(255),
     address TEXT,
     code VARCHAR(50),
@@ -125,7 +125,7 @@ CREATE TABLE transactions_fragrances (
 
 -- Tabla: transactions_history
 CREATE TABLE transactions_history (
-    id SERIAL PRIMARY KEY,
+    id INTEGER,
     id_client INTEGER,
     id_payment_method INTEGER,
     state VARCHAR(50),
@@ -155,5 +155,15 @@ CREATE TABLE transactions_fragrances_history (
     stock_after INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     additional TEXT
+);
+
+-- Tabla: otp
+CREATE TABLE otp (
+    id SERIAL PRIMARY KEY,
+    otp_token VARCHAR(64) NOT NULL UNIQUE,
+    id_transaction BIGINT NOT NULL UNIQUE,
+    issued_at TIMESTAMPTZ NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    FOREIGN KEY (id_transaction) REFERENCES transactions(id)
 );
 

@@ -7,6 +7,7 @@ import com.perfums.transactions.domain.dto.OrderRequestDTO;
 import com.perfums.transactions.domain.dto.OrderResponseDTO;
 import com.perfums.transactions.domain.repository.ClientRepository;
 import com.perfums.transactions.domain.repository.FragranceSizeRepository;
+import com.perfums.transactions.domain.repository.OtpRepository;
 import com.perfums.transactions.domain.repository.PaymentMethodRepository;
 import com.perfums.transactions.domain.repository.TransactionRepository;
 import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.FragranceSizeId;
@@ -37,6 +38,9 @@ public class OrderUseCaseImpl implements OrderUseCase {
 
     @Inject
     TransactionSchedulerService schedulerService;
+
+    @Inject
+    OtpRepository otpRepository;
 
     @Override
     public Uni<OrderResponseDTO> processOrder(OrderRequestDTO request) {
@@ -69,10 +73,11 @@ public class OrderUseCaseImpl implements OrderUseCase {
                                                                             total
                                                                     ).invoke(transaction -> schedulerService
                                                                             .scheduleCancellation(transaction.getId()))
-                                                                    .map(transaction -> {
+                                                                    .flatMap(transaction -> otpRepository.saveOtp(transaction))
+                                                                    .map(otp -> {
                                                                         log.info("Se ha creado la transaccion");
                                                                         OrderResponseDTO response = new OrderResponseDTO();
-                                                                        response.setCode(code);
+                                                                        response.setCode(otp);
                                                                         return response;
                                                                     });
                                                         });
