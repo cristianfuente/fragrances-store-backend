@@ -101,7 +101,15 @@ CREATE TABLE transactions (
     create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     email VARCHAR(255),
     address TEXT,
-    code VARCHAR(50)
+    code VARCHAR(50),
+    firstName VARCHAR(50),
+    lastName VARCHAR(50),
+    documentNumber TEXT,
+    phone TEXT,
+    additionalAddressInfo TEXT,
+    country VARCHAR(50),
+    department TEXT,
+    postalCode VARCHAR(50)
 );
 
 -- Tabla: transactions_fragrances

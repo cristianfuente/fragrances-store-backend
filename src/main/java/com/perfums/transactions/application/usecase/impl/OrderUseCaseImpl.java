@@ -56,19 +56,19 @@ public class OrderUseCaseImpl implements OrderUseCase {
                                                         .flatMap(paymentMethod -> {
                                                             String code = generateTransactionCode();
                                                             return transactionRepository.createTransaction(
-                                                                    client,
-                                                                    request.getProducts(),
-                                                                    request,
-                                                                    paymentMethod,
-                                                                    code,
-                                                                    total
-                                                            ).invoke(transaction -> schedulerService
+                                                                            client,
+                                                                            request.getProducts(),
+                                                                            request,
+                                                                            paymentMethod,
+                                                                            code,
+                                                                            total
+                                                                    ).invoke(transaction -> schedulerService
                                                                             .scheduleCancellation(transaction.getId()))
                                                                     .map(transaction -> {
-                                                                OrderResponseDTO response = new OrderResponseDTO();
-                                                                response.setCode(code);
-                                                                return response;
-                                                            });
+                                                                        OrderResponseDTO response = new OrderResponseDTO();
+                                                                        response.setCode(code);
+                                                                        return response;
+                                                                    });
                                                         });
                                             })
                             );

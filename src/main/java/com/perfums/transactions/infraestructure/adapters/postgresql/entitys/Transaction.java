@@ -50,6 +50,15 @@ public class Transaction {
     private String address;
     private String code;
 
+    private String firstName;
+    private String lastName;
+    private String documentNumber;
+    private String phone;
+    private String additionalAddressInfo;
+    private String country;
+    private String department;
+    private String postalCode;
+
     @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TransactionFragrance> fragrances = new ArrayList<>();
 

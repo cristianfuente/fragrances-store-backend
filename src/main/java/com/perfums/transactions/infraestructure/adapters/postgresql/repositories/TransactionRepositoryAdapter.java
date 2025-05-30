@@ -1,7 +1,10 @@
 package com.perfums.transactions.infraestructure.adapters.postgresql.repositories;
 
+import com.perfums.transactions.application.service.EmailTemplateBuilderService;
+import com.perfums.transactions.domain.dto.EmailRequestDTO;
 import com.perfums.transactions.domain.dto.OrderProductDTO;
 import com.perfums.transactions.domain.dto.OrderRequestDTO;
+import com.perfums.transactions.domain.repository.EmailRepository;
 import com.perfums.transactions.domain.repository.TransactionRepository;
 import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.Client;
 import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.FragranceSizeId;
@@ -34,6 +37,9 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
     @Inject
     TransactionFragancePanacheRepository transactionFragancePanacheRepository;
 
+    @Inject
+    EmailRepository emailRepository;
+
     @Override
     public Uni<Transaction> createTransaction(
             Client client,
@@ -50,6 +56,7 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
     @WithTransaction
     public Uni<Void> cancelTransactionAndRestoreStock(Long transactionId) {
         List<TransactionFragrance> fragrances = new ArrayList<>();
+        List<EmailTemplateBuilderService.ProductItem> items = new ArrayList<>();
         return transactionFragancePanacheRepository
                 .find("id.transactionId", transactionId)
                 .list()
@@ -66,16 +73,30 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
                                             .findById(fragranceSizeId)
                                             .invoke(fragranceSize -> fragranceSize
                                                     .setStock(fragranceSize.getStock() + transactionFragrance.getQuantity()));
-                                }).onItem().transformToUniAndConcatenate(fragranceSize -> fragranceSizePanacheRepository
-                                        .update("stock = ?1 where id.fragranceId = ?2 and id.sizeId = ?3", fragranceSize.getStock(),
-                                                fragranceSize.getFragrance().getId(), fragranceSize.getSize().getId())).collect().asList()
+                                }).onItem().transformToUniAndConcatenate(fragranceSize -> {
+                                            items.add(new EmailTemplateBuilderService.ProductItem(fragranceSize.getImageId(),
+                                                    fragranceSize.getFragrance().getName(), fragranceSize.getPrice().toString()));
+                                            return fragranceSizePanacheRepository
+                                                    .update("stock = ?1 where id.fragranceId = ?2 and id.sizeId = ?3", fragranceSize.getStock(),
+                                                            fragranceSize.getFragrance().getId(), fragranceSize.getSize().getId());
+                                        }
+                                ).collect().asList()
                 ).flatMap(updates -> Multi.createFrom().iterable(fragrances).onItem()
                         .transformToUniAndConcatenate(fragrance -> transactionFragancePanacheRepository
                                 .delete(fragrance))
                         .toUni()
                 ).flatMap(result -> transactionFragancePanacheRepository.flush())
                 .flatMap(result -> transactionPanacheRepository.findById(transactionId))
-                .flatMap(transaction -> transactionPanacheRepository.delete(transaction));
+                .flatMap(transaction -> transactionPanacheRepository.delete(transaction)
+                        .flatMap(response -> {
+                            String html = EmailTemplateBuilderService.buildCanceledOrderHtml(transaction.getCode(),
+                                    transaction.getFirstName(),
+                                    items,
+                                    String.valueOf(transaction.getTotalPayment()));
+                            return emailRepository.send(new EmailRequestDTO(transaction.getEmail(), "Pedido Cancelado", html));
+                        })
+                        .flatMap(response -> Uni.createFrom().voidItem())
+                );
     }
 
     @Override

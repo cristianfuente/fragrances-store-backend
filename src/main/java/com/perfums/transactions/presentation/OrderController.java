@@ -3,7 +3,6 @@ package com.perfums.transactions.presentation;
 import com.perfums.transactions.application.usecase.OrderUseCase;
 import com.perfums.transactions.domain.dto.ErrorDTO;
 import com.perfums.transactions.domain.dto.OrderRequestDTO;
-import com.perfums.transactions.domain.repository.TransactionRepository;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
@@ -23,9 +22,6 @@ public class OrderController {
 
     @Inject
     OrderUseCase orderUseCase;
-
-    @Inject
-    TransactionRepository repository;
 
     @POST
     @WithTransaction

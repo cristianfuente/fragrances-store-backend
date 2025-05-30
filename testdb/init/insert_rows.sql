@@ -39,9 +39,9 @@ INSERT INTO size (size, unit, label) VALUES
 
 -- Datos para fragrances_sizes
 INSERT INTO fragrances_sizes (id_size, id_fragrance, stock, price, image_id) VALUES
-(1, 1, 100, 19.99, 'img_001'),
-(2, 1, 50, 34.99, 'img_002'),
-(1, 2, 80, 24.99, 'img_003');
+(1, 1, 100, 19.99, 'https://media.falabella.com/falabellaCO/68209055_001/w=1500,h=1500,fit=pad'),
+(2, 1, 50, 34.99, 'https://media.falabella.com/falabellaCO/68209055_001/w=1500,h=1500,fit=pad'),
+(1, 2, 80, 24.99, 'https://media.falabella.com/falabellaCO/68209055_001/w=1500,h=1500,fit=pad');
 
 -- Datos para catalogs_parameters_fragrances
 INSERT INTO catalogs_parameters_fragrances (id_fragrance, id_catalog, id_catalog_parameter) VALUES
@@ -50,27 +50,4 @@ INSERT INTO catalogs_parameters_fragrances (id_fragrance, id_catalog, id_catalog
 (2, 1, 2),  -- Vanilla Dream, Género, Mujer
 (2, 2, 3);  -- Vanilla Dream, Edición, Especial
 
--- Datos para transactions
-INSERT INTO transactions (id_client, id_payment_method, state, total_payment, email, address, code) VALUES
-(1, 1, 'WAITING_PAYMENTS', 54.98, 'cliente1@mail.com', 'Calle 123', 'TRX001'),
-(2, 2, 'PAID', 24.99, 'cliente2@mail.com', 'Carrera 456', 'TRX002');
-
--- Datos para transactions_fragrances
-INSERT INTO transactions_fragrances (id_transaction, id_size, id_fragrance, quantity) VALUES
-(1, 1, 1, 2),  -- 2 frascos de 50ml de Ocean Breeze
-(2, 1, 2, 1);  -- 1 frasco de 50ml de Vanilla Dream
-
--- Datos para transactions_history
-INSERT INTO transactions_history (id_client, id_payment_method, state, ip_address, margin_at_purchase, redirect_uri_payment, total_payment, email, address, status_client, additional) VALUES
-(1, 1, 'WAITING_PAYMENTS', '192.168.1.1', 0.15, 'https://payu.com/redirect', 54.98, 'cliente1@mail.com', 'Calle 123', 'ACTIVE', 'Primer intento'),
-(2, 2, 'PAID', '192.168.1.2', 0.10, 'https://stripe.com/redirect', 24.99, 'cliente2@mail.com', 'Carrera 456', 'INACTIVE', 'Pago exitoso');
-
--- Datos para transactions_fragrances_history
-INSERT INTO transactions_fragrances_history (
-    id_size, id_transaction, id_fragrance, fragance_name, size_unit, size,
-    quantity, original_price_at_purchase, payment_price_at_purchase,
-    stock_before, stock_after, additional
-) VALUES
-(1, 1, 1, 'Ocean Breeze', 'ml', 50, 2, 19.99, 19.99, 100, 98, 'Histórico pedido 1'),
-(1, 2, 2, 'Vanilla Dream', 'ml', 50, 1, 24.99, 24.99, 80, 79, 'Histórico pedido 2');
 
