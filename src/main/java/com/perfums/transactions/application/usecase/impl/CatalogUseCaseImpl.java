@@ -7,11 +7,13 @@ import com.perfums.transactions.domain.repository.CatalogRepository;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
+@Slf4j
 public class CatalogUseCaseImpl implements CatalogUseCase {
 
     @Inject
@@ -19,6 +21,7 @@ public class CatalogUseCaseImpl implements CatalogUseCase {
 
     @Override
     public Uni<List<CatalogFilterDTO>> getCatalogFilters() {
+        log.info("Retornando listado de catalogos");
         return catalogRepository.findAllWithParameters().onItem().transform(catalogs ->
                 catalogs.stream().map(catalog -> {
                     CatalogFilterDTO dto = new CatalogFilterDTO();

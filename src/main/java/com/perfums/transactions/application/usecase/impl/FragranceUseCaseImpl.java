@@ -13,6 +13,7 @@ import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.Size
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
+@Slf4j
 public class FragranceUseCaseImpl implements FragranceUseCase {
 
     @Inject
@@ -32,6 +34,7 @@ public class FragranceUseCaseImpl implements FragranceUseCase {
     public Uni<FragrancePaginatedResponseDTO> getAllFragrances(FragranceFilterRequestDTO request) {
         return clientRepository.findByApiKey(request.getApiKey())
                 .flatMap(client -> {
+                    log.info("Cliente encontrado para transaccion");
                     double margin = client.getMargin() != null ? client.getMargin() : 0.0;
                     int page = Optional.ofNullable(request.getPage()).orElse(0);
                     int size = Optional.ofNullable(request.getSize()).orElse(10);
@@ -40,6 +43,7 @@ public class FragranceUseCaseImpl implements FragranceUseCase {
                             .flatMap(fragrances ->
                                     fragranceRepository.countFiltered(request.getFilters(), request.getSearchText())
                                             .map(total -> {
+                                                log.info("Retornando lista de fragancias");
                                                 List<FragranceDTO> fragranceDTOs = fragrances.stream()
                                                         .map(f -> toDTO(f, margin))
                                                         .collect(Collectors.toList());

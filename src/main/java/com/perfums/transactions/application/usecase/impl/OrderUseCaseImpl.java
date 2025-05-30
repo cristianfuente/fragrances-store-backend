@@ -42,18 +42,23 @@ public class OrderUseCaseImpl implements OrderUseCase {
     public Uni<OrderResponseDTO> processOrder(OrderRequestDTO request) {
         return clientRepository.findByApiKey(request.getApiKey())
                 .flatMap(client -> {
+                    log.info("Cliente encontrado para transaccion");
                     double margin = client.getMargin() != null ? client.getMargin() : 0.0;
 
                     return calculateTotalSequentially(request.getProducts(), margin)
                             .flatMap(total ->
                                     fragranceSizeRepository.verifyAndReserveStock(request.getProducts())
                                             .flatMap(isAvailable -> {
+                                                log.info("verificacion de stock de fragancias");
                                                 if (!isAvailable) {
+                                                    log.error("Stock insuficiente");
                                                     return Uni.createFrom().failure(new IllegalStateException("Insufficient stock for one or more products."));
                                                 }
 
+                                                log.info("Stock disponible para transaccion");
                                                 return paymentMethodRepository.findById(request.getPaymentMethodId())
                                                         .flatMap(paymentMethod -> {
+                                                            log.info("Verificacion metodo de pago completa");
                                                             String code = generateTransactionCode();
                                                             return transactionRepository.createTransaction(
                                                                             client,
@@ -65,6 +70,7 @@ public class OrderUseCaseImpl implements OrderUseCase {
                                                                     ).invoke(transaction -> schedulerService
                                                                             .scheduleCancellation(transaction.getId()))
                                                                     .map(transaction -> {
+                                                                        log.info("Se ha creado la transaccion");
                                                                         OrderResponseDTO response = new OrderResponseDTO();
                                                                         response.setCode(code);
                                                                         return response;
@@ -86,6 +92,7 @@ public class OrderUseCaseImpl implements OrderUseCase {
     }
 
     private Uni<BigDecimal> calculateTotalRecursive(List<OrderProductDTO> products, double margin, int index, BigDecimal accumulator) {
+        log.info("Calculando total precio para transaccion");
         if (index >= products.size()) {
             return Uni.createFrom().item(accumulator);
         }
@@ -95,6 +102,7 @@ public class OrderUseCaseImpl implements OrderUseCase {
 
         return fragranceSizeRepository.findById(id)
                 .flatMap(fragranceSize -> {
+                    log.info("Obteniendo informacion de fragancia y tamano");
                     BigDecimal basePrice = fragranceSize.getPrice();
                     BigDecimal priceWithMargin = basePrice.add(basePrice.multiply(BigDecimal.valueOf(margin)));
                     BigDecimal total = priceWithMargin.multiply(BigDecimal.valueOf(current.getQuantity()));
