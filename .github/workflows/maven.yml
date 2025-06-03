@@ -69,15 +69,27 @@ jobs:
             sudo docker login -u cristianuis -p '${{ secrets.DOCKER_PASSWORD }}'
             sudo docker pull cristianuis/quarkus-app:latest
 
-            echo "🧹 Deteniendo servicios anteriores..."
-            cd ~/app/testdb
-            sudo docker-compose -f docker-compose.yaml down --volumes --remove-orphans || true
+            echo "🧹 Limpiando contenedores antiguos..."
+            sudo docker stop quarkus-app || true
+            sudo docker rm quarkus-app || true
 
-            echo "🚀 Levantando servicios con docker-compose..."
+            cd ~/app/testdb
+
+            echo "🐘 Levantando base de datos con docker-compose..."
             sudo docker-compose -f docker-compose.yaml up -d
 
+            echo "⏳ Esperando 10s a que DB esté lista..."
+            sleep 10
+
+            echo "🚀 Ejecutando contenedor Quarkus..."
+            RED=$(docker network ls --filter name=testdb_default --format "{{.Name}}")
+            sudo docker run -d --name quarkus-app \
+              --network \$RED \
+              -e DB_HOST=db \
+              -p 8080:8080 -p 8443:8443 \
+              cristianuis/quarkus-app:latest
+
             echo "✅ Despliegue completo"
-            echo "🧪 Contenedores activos:"
-            sudo docker ps
+            echo "📋 Logs recientes:"
+            sudo docker logs --tail=50 quarkus-app || true
           EOF
-      
