@@ -47,7 +47,7 @@ jobs:
           scp -i ~/.ssh/id_rsa testdb/docker-compose.yaml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app/testdb/docker-compose.yaml
 
           echo "🚀 Conectando a EC2 para instalar y desplegar"
-          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
             set -e
 
             echo "🔧 Instalando Docker..."
@@ -60,7 +60,7 @@ jobs:
 
             echo "🔧 Instalando Docker Compose (clásico)..."
             if ! command -v docker-compose >/dev/null 2>&1; then
-              sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" \
+              sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-\$(uname -s)-\$(uname -m)" \
                 -o /usr/local/bin/docker-compose
               sudo chmod +x /usr/local/bin/docker-compose
             fi
@@ -82,10 +82,10 @@ jobs:
             sleep 10
 
             echo "🚀 Ejecutando contenedor Quarkus..."
-            RED=$(docker network ls --filter name=testdb_default --format "{{.Name}}")
+            NETWORK_NAME=\$(docker network ls --filter name=testdb_default --format "{{.Name}}")
             sudo docker run -d --name quarkus-app \
-              --network \$RED \
-              -e DB_HOST=db \
+              --network "\$NETWORK_NAME" \
+              -e DB_HOST=postgres \
               -p 8080:8080 -p 8443:8443 \
               cristianuis/quarkus-app:latest
 
