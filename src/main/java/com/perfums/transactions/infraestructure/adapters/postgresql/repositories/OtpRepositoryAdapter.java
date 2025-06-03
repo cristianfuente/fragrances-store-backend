@@ -33,4 +33,9 @@ public class OtpRepositoryAdapter implements OtpRepository {
         return otpPanacheRepository.persist(otp).map(Otp::getOtpToken);
     }
 
+    @Override
+    public Uni<Otp> findByOtpValue(String otp){
+        return otpPanacheRepository.findByOtpValue(otp);
+    }
+
 }

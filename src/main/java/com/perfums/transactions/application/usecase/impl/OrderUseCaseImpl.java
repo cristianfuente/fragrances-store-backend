@@ -11,6 +11,7 @@ import com.perfums.transactions.domain.repository.OtpRepository;
 import com.perfums.transactions.domain.repository.PaymentMethodRepository;
 import com.perfums.transactions.domain.repository.TransactionRepository;
 import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.FragranceSizeId;
+import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.PaymentParameter;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -41,6 +42,16 @@ public class OrderUseCaseImpl implements OrderUseCase {
 
     @Inject
     OtpRepository otpRepository;
+
+//    public Uni<String> generateRedirectUrl(String otp){
+//        return otpRepository.findByOtpValue(otp)
+//                .flatMap(otp -> {
+//                  String urlPayment = otp.getTransaction().getPaymentMethod().getUrl();
+//                  List<PaymentParameter> parameters = otp.getTransaction().getPaymentMethod().getPaymentParameters();
+//                  String urlRedirect = "http://localhost:8080/order/";
+//                  String codeTransaction = otp.getTransaction().getCode();
+//                })
+//    }
 
     @Override
     public Uni<OrderResponseDTO> processOrder(OrderRequestDTO request) {
