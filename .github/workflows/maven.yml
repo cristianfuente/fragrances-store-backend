@@ -1,61 +1,80 @@
-name: Deploy to EC2
+name: CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - master
+    branches: [ master ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout del repositorio
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Configurar JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
           distribution: 'temurin'
+          java-version: '21'
 
-      - name: Build project
+      - name: Build de la aplicación
         run: ./mvnw package -DskipTests
 
-      - name: Set up SSH key
+      - name: Configurar clave SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Copy files to EC2 with scp
+      - name: Subir archivos a EC2
         run: |
-          scp -i ~/.ssh/id_rsa \
-              -o StrictHostKeyChecking=no \
-              -r target/quarkus-app Dockerfile testdb \
-              ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ec2-user/app
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ~/app"
+          scp -i ~/.ssh/id_rsa -r target/quarkus-app Dockerfile testdb ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app
 
-      - name: SSH and deploy
-        uses: appleboy/ssh-action@v0.1.8
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd /home/ec2-user/app
+      - name: Desplegar en EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            set -e
 
-            echo "Levantar base de datos PostgreSQL..."
-            docker compose -f testdb/docker-compose.yml up -d
+            echo "🔧 Instalando Docker y Docker Compose si es necesario..."
+            if ! command -v docker >/dev/null 2>&1; then
+              sudo apt-get update
+              sudo apt-get install -y docker.io
+              sudo systemctl start docker
+              sudo systemctl enable docker
+              sudo usermod -aG docker $USER
+              newgrp docker
+            fi
 
-            echo "Construir imagen de la app..."
-            docker build -f Dockerfile -t my-quarkus-app .
+            if ! docker compose version >/dev/null 2>&1; then
+              mkdir -p ~/.docker/cli-plugins
+              curl -SL https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-linux-x86_64 \
+                -o ~/.docker/cli-plugins/docker-compose
+              chmod +x ~/.docker/cli-plugins/docker-compose
+            fi
 
-            echo "Reiniciar contenedor de la app..."
+            echo "📦 Despliegue desde ~/app..."
+            cd ~/app
+
+            echo "🧹 Limpiando contenedores anteriores..."
+            docker compose -f testdb/docker-compose.yml down --volumes --remove-orphans || true
             docker stop quarkus-app || true
             docker rm quarkus-app || true
 
+            echo "🏗️ Construyendo imagen de Quarkus..."
+            docker build -f Dockerfile -t my-quarkus-app .
+
+            echo "🚀 Levantando PostgreSQL..."
+            docker compose -f testdb/docker-compose.yml up -d
+
+            echo "🚀 Corriendo app Quarkus..."
             docker run -d --name quarkus-app \
               -p 8080:8080 -p 8443:8443 \
               --network testdb_default \
               -e DB_HOST=db \
               my-quarkus-app
+
+            echo "✅ Despliegue completo"
+          EOF
