@@ -64,6 +64,13 @@ jobs:
                 -o /usr/local/bin/docker-compose
               sudo chmod +x /usr/local/bin/docker-compose
             fi
+          
+            echo "🧹 Limpiando Docker: contenedores, imágenes, volúmenes y redes..."
+            sudo docker container stop $(sudo docker container ls -aq) || true
+            sudo docker container rm $(sudo docker container ls -aq) || true
+            sudo docker image rm -f $(sudo docker image ls -aq) || true
+            sudo docker volume rm -f $(sudo docker volume ls -q) || true
+            sudo docker network prune -f || true
 
             echo "📁 Preparando carpeta de despliegue"
             mkdir -p ~/app
