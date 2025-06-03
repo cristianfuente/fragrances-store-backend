@@ -44,7 +44,7 @@ jobs:
 
           echo "📄 Copiando docker-compose.yaml a EC2"
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ~/app/testdb"
-          scp -i ~/.ssh/id_rsa testdb/ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app/testdb
+          scp -i ~/.ssh/id_rsa -r testdb/ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app/
 
           echo "🚀 Conectando a EC2 para instalar y desplegar"
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
