@@ -5,7 +5,7 @@ on:
     branches: [ master ]
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,27 +18,34 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Build de la aplicación
+      - name: Compilar la app Quarkus
         run: ./mvnw package -DskipTests
 
-      - name: Configurar clave SSH
+      - name: Build de imagen Docker
+        run: docker build -t cristianuis/quarkus-app:${{ github.run_number }} -t cristianuis/quarkus-app:latest .
+
+      - name: Login en Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push de la imagen
+        run: |
+          docker push cristianuis/quarkus-app:${{ github.run_number }}
+          docker push cristianuis/quarkus-app:latest
+
+      - name: Deploy en EC2 via SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Subir archivos a EC2
-        run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ~/app"
-          scp -i ~/.ssh/id_rsa -r target/quarkus-app Dockerfile testdb ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app
-
-      - name: Desplegar en EC2
-        run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             set -e
 
-            echo "🔧 Instalando Docker y Docker Compose si es necesario..."
+            echo "🔧 Instalando Docker si no está..."
             if ! command -v docker >/dev/null 2>&1; then
               sudo apt-get update
               sudo apt-get install -y docker.io
@@ -48,33 +55,18 @@ jobs:
               newgrp docker
             fi
 
-            if ! docker compose version >/dev/null 2>&1; then
-              mkdir -p ~/.docker/cli-plugins
-              curl -SL https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-linux-x86_64 \
-                -o ~/.docker/cli-plugins/docker-compose
-              chmod +x ~/.docker/cli-plugins/docker-compose
-            fi
-
-            echo "📦 Despliegue desde ~/app..."
-            cd ~/app
-
-            echo "🧹 Limpiando contenedores anteriores..."
-            docker compose -f testdb/docker-compose.yml down --volumes --remove-orphans || true
+            echo "🧹 Limpiando contenedor viejo..."
             docker stop quarkus-app || true
             docker rm quarkus-app || true
 
-            echo "🏗️ Construyendo imagen de Quarkus..."
-            docker build -f Dockerfile -t my-quarkus-app .
+            echo "📥 Pull de la nueva imagen"
+            docker login -u cristianuis -p '${{ secrets.DOCKER_PASSWORD }}'
+            docker pull cristianuis/quarkus-app:latest
 
-            echo "🚀 Levantando PostgreSQL..."
-            docker compose -f testdb/docker-compose.yml up -d
-
-            echo "🚀 Corriendo app Quarkus..."
+            echo "🚀 Ejecutando contenedor"
             docker run -d --name quarkus-app \
               -p 8080:8080 -p 8443:8443 \
-              --network testdb_default \
-              -e DB_HOST=db \
-              my-quarkus-app
+              cristianuis/quarkus-app:latest
 
             echo "✅ Despliegue completo"
           EOF
