@@ -35,38 +35,49 @@ jobs:
           docker push cristianuis/quarkus-app:${{ github.run_number }}
           docker push cristianuis/quarkus-app:latest
 
-      - name: Deploy en EC2 via SSH
+      - name: Deploy en EC2 via SSH + docker-compose
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
+          echo "📄 Copiando docker-compose.yaml a EC2"
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ~/app/testdb"
+          scp -i ~/.ssh/id_rsa testdb/docker-compose.yaml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app/testdb/docker-compose.yaml
+
+          echo "🚀 Conectando a EC2 para instalar y desplegar"
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             set -e
 
-            echo "🔧 Instalando Docker si no está..."
+            echo "🔧 Instalando Docker si es necesario..."
             if ! command -v docker >/dev/null 2>&1; then
               sudo apt-get update
               sudo apt-get install -y docker.io
               sudo systemctl start docker
               sudo systemctl enable docker
-              sudo usermod -aG docker $USER
-              newgrp docker
             fi
 
-            echo "🧹 Limpiando contenedor viejo..."
-            docker stop quarkus-app || true
-            docker rm quarkus-app || true
+            echo "🔧 Instalando Docker Compose plugin si es necesario..."
+            if ! docker compose version >/dev/null 2>&1; then
+              mkdir -p ~/.docker/cli-plugins
+              curl -SL https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-linux-x86_64 \
+                -o ~/.docker/cli-plugins/docker-compose
+              chmod +x ~/.docker/cli-plugins/docker-compose
+            fi
 
-            echo "📥 Pull de la nueva imagen"
-            docker login -u cristianuis -p '${{ secrets.DOCKER_PASSWORD }}'
-            docker pull cristianuis/quarkus-app:latest
+            echo "📥 Login a Docker Hub y pull de imagen"
+            sudo docker login -u cristianuis -p '${{ secrets.DOCKER_PASSWORD }}'
+            sudo docker pull cristianuis/quarkus-app:latest
 
-            echo "🚀 Ejecutando contenedor"
-            docker run -d --name quarkus-app \
-              -p 8080:8080 -p 8443:8443 \
-              cristianuis/quarkus-app:latest
+            echo "🧹 Deteniendo servicios anteriores..."
+            cd ~/app/testdb
+            sudo docker compose -f docker-compose.yaml down --volumes --remove-orphans || true
+
+            echo "🚀 Levantando servicios con docker-compose..."
+            sudo docker compose -f docker-compose.yaml up -d
 
             echo "✅ Despliegue completo"
+            echo "🧪 Contenedores activos:"
+            sudo docker ps
           EOF
