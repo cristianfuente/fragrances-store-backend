@@ -44,7 +44,7 @@ jobs:
 
           echo "📄 Copiando docker-compose.yaml a EC2"
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ~/app/testdb"
-          scp -i ~/.ssh/id_rsa testdb/docker-compose.yaml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app/testdb/docker-compose.yaml
+          scp -i ~/.ssh/id_rsa testdb/docker-compose.yaml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app/testdb
 
           echo "🚀 Conectando a EC2 para instalar y desplegar"
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
@@ -76,6 +76,7 @@ jobs:
             cd ~/app/testdb
 
             echo "🐘 Levantando base de datos con docker-compose..."
+            sudo docker-compose -f docker-compose.yaml down
             sudo docker-compose -f docker-compose.yaml up -d
 
             echo "⏳ Esperando 10s a que DB esté lista..."
@@ -86,7 +87,7 @@ jobs:
             sudo docker run -d --name quarkus-app \
               --network "\$NETWORK_NAME" \
               -e DB_HOST=postgres \
-              -p 8080:8080 -p 8443:8443 \
+              -p 8443:8443 \
               cristianuis/quarkus-app:latest
 
             echo "✅ Despliegue completo"
