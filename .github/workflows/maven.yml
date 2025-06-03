@@ -30,7 +30,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           source: |
             target/quarkus-app/**,
-            src/main/docker/Dockerfile.jvm,
+            Dockerfile,
             testdb/**
           target: /home/ec2-user/app
 
@@ -47,7 +47,7 @@ jobs:
             docker compose -f testdb/docker-compose.yml up -d
 
             echo "Construir imagen de la app..."
-            docker build -f src/main/docker/Dockerfile.jvm -t my-quarkus-app .
+            docker build -f Dockerfile -t my-quarkus-app .
 
             echo "Reiniciar contenedor de la app..."
             docker stop quarkus-app || true
@@ -55,5 +55,7 @@ jobs:
 
             docker run -d --name quarkus-app \
               -p 8080:8080 -p 8443:8443 \
-              --link testdb_db_1:db \
+              --network testdb_default \
+              -e DB_HOST=db \
               my-quarkus-app
+      
