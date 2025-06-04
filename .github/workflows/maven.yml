@@ -56,11 +56,11 @@ jobs:
             fi
           
             echo "🧹 Limpiando Docker: contenedores, imágenes, volúmenes y redes..."
-            sudo docker container stop $(sudo docker container ls -aq) || true
-            sudo docker container rm $(sudo docker container ls -aq) || true
-            sudo docker image rm -f $(sudo docker image ls -aq) || true
-            sudo docker volume rm -f $(sudo docker volume ls -q) || true
-            sudo docker network prune -f || true
+            docker container stop $(sudo docker container ls -aq) || true
+            docker container rm $(sudo docker container ls -aq) || true
+            docker image rm -f $(sudo docker image ls -aq) || true
+            docker volume rm -f $(sudo docker volume ls -q) || true
+            docker network prune -f || true
 
             echo "📥 Login en Docker Hub y pull de imagen"
             sudo docker login -u cristianuis -p '${{ secrets.DOCKER_PASSWORD }}'
