@@ -55,26 +55,37 @@ jobs:
               sudo systemctl enable docker
             fi
           
-            echo "🧹 Limpiando Docker: contenedores, imágenes, volúmenes y redes..."
-            docker container stop $(sudo docker container ls -aq) || true
-            docker container rm $(sudo docker container ls -aq) || true
-            docker image rm -f $(sudo docker image ls -aq) || true
-            docker volume rm -f $(sudo docker volume ls -q) || true
-            docker network prune -f || true
+            echo "🧹 Limpiando Docker: contenedores y volúmenes..."
+            CONTAINERS=\$(sudo docker ps -aq)
+            if [ -n "\$CONTAINERS" ]; then
+              sudo docker stop \$CONTAINERS
+              sudo docker rm \$CONTAINERS
+            fi
+
+            VOLUMES=\$(sudo docker volume ls -q)
+            if [ -n "\$VOLUMES" ]; then
+              sudo docker volume rm -f \$VOLUMES
+            fi
+
+            sudo docker network prune -f || true
 
             echo "📥 Login en Docker Hub y pull de imagen"
             sudo docker login -u cristianuis -p '${{ secrets.DOCKER_PASSWORD }}'
             sudo docker pull cristianuis/quarkus-app:latest
 
-            echo "🧹 Deteniendo contenedores anteriores"
-            sudo docker stop quarkus-app || true
-            sudo docker rm quarkus-app || true
+            echo "🧹 Eliminando imágenes antiguas excepto la nueva"
+            CURRENT_IMAGE_ID=\$(sudo docker images -q cristianuis/quarkus-app:latest)
+            for IMAGE_ID in \$(sudo docker images -q | sort -u); do
+              if [ "\$IMAGE_ID" != "\$CURRENT_IMAGE_ID" ]; then
+                sudo docker rmi -f \$IMAGE_ID || true
+              fi
+            done
 
             echo "🚀 Ejecutando contenedor Quarkus conectado a RDS"
             sudo docker run -d --name quarkus-app \
-            -e DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
-            -p 8443:8443 \
-            cristianuis/quarkus-app:latest
+              -e DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
+              -p 8443:8443 \
+              cristianuis/quarkus-app:latest
 
             echo "✅ Despliegue completo"
             sudo docker ps
