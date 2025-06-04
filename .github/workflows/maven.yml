@@ -43,9 +43,6 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-          echo "📦 Copiando testdb/ completo a la home del usuario remoto"
-          scp -i ~/.ssh/id_rsa -r testdb/ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/
-
           echo "🚀 Ejecutando despliegue en EC2"
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
             set -e
@@ -57,13 +54,6 @@ jobs:
               sudo systemctl start docker
               sudo systemctl enable docker
             fi
-
-            echo "🔧 Instalando Docker Compose si es necesario..."
-            if ! command -v docker-compose >/dev/null 2>&1; then
-              sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-\$(uname -s)-\$(uname -m)" \
-                -o /usr/local/bin/docker-compose
-              sudo chmod +x /usr/local/bin/docker-compose
-            fi
           
             echo "🧹 Limpiando Docker: contenedores, imágenes, volúmenes y redes..."
             sudo docker container stop $(sudo docker container ls -aq) || true
@@ -71,11 +61,6 @@ jobs:
             sudo docker image rm -f $(sudo docker image ls -aq) || true
             sudo docker volume rm -f $(sudo docker volume ls -q) || true
             sudo docker network prune -f || true
-
-            echo "📁 Preparando carpeta de despliegue"
-            mkdir -p ~/app
-            rm -rf ~/app/testdb
-            mv ~/testdb ~/app/
 
             echo "📥 Login en Docker Hub y pull de imagen"
             sudo docker login -u cristianuis -p '${{ secrets.DOCKER_PASSWORD }}'
@@ -85,21 +70,11 @@ jobs:
             sudo docker stop quarkus-app || true
             sudo docker rm quarkus-app || true
 
-            echo "🐘 Levantando base de datos con docker-compose"
-            cd ~/app/testdb
-            sudo docker-compose down
-            sudo docker-compose up -d
-
-            echo "⏳ Esperando a que DB esté lista..."
-            sleep 10
-
-            echo "🚀 Ejecutando contenedor Quarkus"
-            NETWORK_NAME=\$(docker network ls --filter name=testdb_default --format "{{.Name}}")
+            echo "🚀 Ejecutando contenedor Quarkus conectado a RDS"
             sudo docker run -d --name quarkus-app \
-              --network "\$NETWORK_NAME" \
-              -e DB_HOST=postgres \
-              -p 8443:8443 \
-              cristianuis/quarkus-app:latest
+            -e DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
+            -p 8443:8443 \
+            cristianuis/quarkus-app:latest
 
             echo "✅ Despliegue completo"
             sudo docker ps
