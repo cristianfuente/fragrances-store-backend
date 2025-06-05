@@ -4,6 +4,7 @@ import com.perfums.transactions.application.service.EmailTemplateBuilderService;
 import com.perfums.transactions.domain.dto.EmailRequestDTO;
 import com.perfums.transactions.domain.dto.OrderProductDTO;
 import com.perfums.transactions.domain.dto.OrderRequestDTO;
+import com.perfums.transactions.domain.models.StateType;
 import com.perfums.transactions.domain.repository.EmailRepository;
 import com.perfums.transactions.domain.repository.TransactionRepository;
 import com.perfums.transactions.infraestructure.adapters.postgresql.entitys.Client;
@@ -51,6 +52,43 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
             BigDecimal totalPayment
     ) {
         return transactionPanacheRepository.createTransaction(client, products, requestDTO, paymentMethod, code, totalPayment);
+    }
+
+    @Override
+    public Uni<Void> confirmPayment(Transaction transaction) {
+        List<TransactionFragrance> fragrances = new ArrayList<>();
+        List<EmailTemplateBuilderService.ProductItem> items = new ArrayList<>();
+        return transactionPanacheRepository.update("state = ?1 where id = ?2", StateType.PAID, transaction.getId())
+                .onItem().transformToMulti(response -> Multi.createFrom().iterable(transaction.getFragrances()))
+                .onItem().transformToUniAndConcatenate(transactionFragrance -> {
+                    FragranceSizeId fragranceSizeId = new FragranceSizeId(
+                            transactionFragrance.getSize().getId(),
+                            transactionFragrance.getFragrance().getId()
+                    );
+                    fragrances.add(transactionFragrance);
+                    return fragranceSizePanacheRepository.findById(fragranceSizeId);
+                }).invoke(fragranceSize -> items.add(new EmailTemplateBuilderService.ProductItem(fragranceSize.getImageId(),
+                        fragranceSize.getFragrance().getName(), fragrances
+                        .stream()
+                        .filter(fr -> Objects.equals(fr.getId().getFragranceId(), fragranceSize.getFragrance().getId()))
+                        .findFirst()
+                        .get().getQuantity().toString()
+                ))).collect().asList()
+                .flatMap(response -> {
+                    EmailTemplateBuilderService.CustomerInfo customerInfo = new EmailTemplateBuilderService
+                            .CustomerInfo(transaction.getFirstName(),
+                            transaction.getLastName(),
+                            transaction.getAddress(),
+                            transaction.getAdditionalAddressInfo(),
+                            transaction.getCountry(),
+                            transaction.getDepartment(),
+                            transaction.getPostalCode());
+                    String html = EmailTemplateBuilderService.buildPaidOrderHtml(transaction.getCode(),
+                            transaction.getFirstName(),
+                            items,
+                            String.valueOf(transaction.getTotalPayment()), customerInfo);
+                    return emailRepository.send(new EmailRequestDTO(transaction.getEmail(), "Pedido Confirmado", html));
+                }).flatMap(res -> Uni.createFrom().voidItem());
     }
 
     @Override

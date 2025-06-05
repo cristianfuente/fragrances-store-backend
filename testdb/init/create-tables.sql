@@ -14,6 +14,7 @@ CREATE TABLE clients (
     name VARCHAR(255),
     api_key VARCHAR(255),
     margin NUMERIC,
+    url TEXT,
     status VARCHAR(50),
     code VARCHAR(50),
     created_at TIMESTAMP DEFAULT NOW()

@@ -1,20 +1,22 @@
 -- Datos para clients
-INSERT INTO clients (name, api_key, margin, status, code) VALUES
-('Cliente 1', 'APIKEY123', 0.15, 'ACTIVE', 'CL001'),
-('Cliente 2', 'APIKEY456', 0.10, 'INACTIVE', 'CL002');
+INSERT INTO clients (name, api_key, margin, url, status, code) VALUES
+('Cliente 1', 'APIKEY123', 0.15, 'http://localhost:4200/checkout','ACTIVE', 'CL001'),
+('Cliente 2', 'APIKEY456', 0.10, 'http://localhost:4200/checkout','INACTIVE', 'CL002');
 
 -- Datos para payment_methods
 INSERT INTO payment_methods (name, url, session_duration, code) VALUES
-('PayU', 'https://payu.com', 5, 'PAYU'),
-('Nequi', 'https://stripe.com', 5, 'STRIPE');
+('PayU', 'https://banksimulator.xyz', 5, 'PAYU'),
+('Nequi', 'https://banksimulator.xyz', 5, 'STRIPE');
 
 -- Datos para payment_parameters
 INSERT INTO payment_parameters (id_payment_method, key, value, code) VALUES
 (1, 'api_key', 'payu_api_key', null),
 (1, 'redirect_uri', null, 'REDIRECT_URI'),
-(1, 'payment', null, 'PAYMENT'),
-(2, 'payment', null, 'PAYMENT'),
+(1, 'total_payment', null, 'PAYMENT'),
+(1, 'reference_id', null, 'TRANSACTION'),
+(2, 'total_payment', null, 'PAYMENT'),
 (2, 'redirect_uri', null, 'REDIRECT_URI'),
+(2, 'reference_id', null, 'TRANSACTION'),
 (2, 'api_key', 'stripe_api_key', null);
 
 -- Datos para catalogs

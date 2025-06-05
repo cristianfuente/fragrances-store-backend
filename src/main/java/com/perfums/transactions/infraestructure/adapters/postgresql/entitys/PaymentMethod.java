@@ -32,7 +32,7 @@ public class PaymentMethod {
 
     private String code;
 
-    @OneToMany(mappedBy = "paymentMethod", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "paymentMethod", fetch = FetchType.EAGER)
     private List<PaymentParameter> paymentParameters;
 
 }

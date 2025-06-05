@@ -3,7 +3,6 @@ package com.perfums.transactions.presentation;
 import com.perfums.transactions.application.usecase.OrderUseCase;
 import com.perfums.transactions.domain.dto.ErrorDTO;
 import com.perfums.transactions.domain.dto.OrderRequestDTO;
-import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
@@ -39,11 +38,36 @@ public class OrderController {
                         .build());
     }
 
-//    @GET
-//    @Path("/payment/{otp}")
-//    @WithSession
-//    public Uni<Response> redirectToPayment(@PathParam("otp") String otp){
-//
-//    }
+    @GET
+    @Path("/payment/{otp}")
+    @WithTransaction
+    public Uni<Response> redirectToPayment(@PathParam("otp") String otp) {
+        return orderUseCase.generateRedirectUrl(otp)
+                .map(url -> Response
+                        .status(Response.Status.FOUND) // 302 Redirect
+                        .header("Location", url)
+                        .build())
+                .onFailure()
+                .recoverWithItem(throwable -> Response
+                        .status(Response.Status.BAD_REQUEST)
+                        .entity(new ErrorDTO("No se pudo generar la redirección: " + throwable.getMessage()))
+                        .build());
+    }
+
+    @GET
+    @Path("/checkout/{otp}")
+    @WithTransaction
+    public Uni<Response> resolveClientRedirection(@PathParam("otp") String otp) {
+        return orderUseCase.resolverClientRedirection(otp)
+                .map(url -> Response
+                        .status(Response.Status.FOUND) // 302 Redirect
+                        .header("Location", url)
+                        .build())
+                .onFailure()
+                .recoverWithItem(throwable -> Response
+                        .status(Response.Status.BAD_REQUEST)
+                        .entity(new ErrorDTO("No se pudo generar la redirección: " + throwable.getMessage()))
+                        .build());
+    }
 
 }

@@ -10,7 +10,7 @@ import io.smallrye.mutiny.Uni;
 import java.math.BigDecimal;
 import java.util.List;
 
-public interface TransactionRepository{
+public interface TransactionRepository {
     Uni<Transaction> createTransaction(
             Client client,
             List<OrderProductDTO> products,
@@ -19,6 +19,8 @@ public interface TransactionRepository{
             String code,
             BigDecimal totalPayment
     );
+
+    public Uni<Void> confirmPayment(Transaction transaction);
 
     Uni<Void> cancelTransactionAndRestoreStock(Long transactionId);
 

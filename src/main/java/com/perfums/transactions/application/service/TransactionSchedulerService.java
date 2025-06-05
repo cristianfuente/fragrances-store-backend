@@ -1,6 +1,7 @@
 package com.perfums.transactions.application.service;
 
 import com.perfums.transactions.domain.models.StateType;
+import com.perfums.transactions.domain.repository.PaymentStatusRepository;
 import com.perfums.transactions.domain.repository.TransactionRepository;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.Vertx;
@@ -21,6 +22,9 @@ public class TransactionSchedulerService {
     @Inject
     Vertx vertx;
 
+    @Inject
+    PaymentStatusRepository paymentStatusRepository;
+
     @ConfigProperty(name = "payment.session.duration.seconds")
     String sessionDuration;
 
@@ -35,9 +39,15 @@ public class TransactionSchedulerService {
                         if (transaction.getState().equals(StateType.PAID)) {
                             return Uni.createFrom().voidItem();
                         }
-                        return transactionRepository
-                                .cancelTransactionAndRestoreStock(transactionId)
-                                .invoke(() -> log.info("Transacción {} cancelada por falta de pago", transaction.getCode()));
+                        return paymentStatusRepository.verifyTransaction(transaction.getCode())
+                                .onItem().transformToUni(response -> {
+                                    log.info("Se ha encontrado el pago para la transaccion");
+                                    return transactionRepository.confirmPayment(transaction);
+                                })
+                                .onFailure()
+                                .recoverWithUni(th -> transactionRepository
+                                        .cancelTransactionAndRestoreStock(transactionId)
+                                        .invoke(() -> log.info("Transacción {} cancelada por falta de pago", transaction.getCode())));
                     })
                     .subscribe().with(
                             ignoredResult -> log.info("Verificación completa"),

@@ -38,4 +38,15 @@ public class OtpRepositoryAdapter implements OtpRepository {
         return otpPanacheRepository.findByOtpValue(otp);
     }
 
+    @Override
+    public Uni<Void> deleteOtp(Otp otp){
+        return otpPanacheRepository.delete(otp);
+    }
+
+    @Override
+    public Uni<Integer> updateOtp(Otp otp, String token) {
+        return otpPanacheRepository.update("otpToken = ?1 where id = ?2", token, otp.getId());
+    }
+
+
 }

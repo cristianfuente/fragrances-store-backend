@@ -6,6 +6,10 @@ import io.smallrye.mutiny.Uni;
 
 public interface OrderUseCase {
 
+    Uni<String> generateRedirectUrl(String tokenValue);
+
+    Uni<String> resolverClientRedirection(String tokenValue);
+
     Uni<OrderResponseDTO> processOrder(OrderRequestDTO request);
 
 }

@@ -25,6 +25,7 @@ public class Client {
     private String apiKey;
 
     private Double margin;
+    private String url;
     private String status;
     private String code;
 
