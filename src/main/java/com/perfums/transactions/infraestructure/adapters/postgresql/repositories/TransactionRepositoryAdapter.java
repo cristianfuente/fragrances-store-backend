@@ -54,41 +54,67 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
         return transactionPanacheRepository.createTransaction(client, products, requestDTO, paymentMethod, code, totalPayment);
     }
 
-    @Override
-    public Uni<Void> confirmPayment(Transaction transaction) {
-        List<TransactionFragrance> fragrances = new ArrayList<>();
-        List<EmailTemplateBuilderService.ProductItem> items = new ArrayList<>();
-        return transactionPanacheRepository.update("state = ?1 where id = ?2", StateType.PAID, transaction.getId())
-                .onItem().transformToMulti(response -> Multi.createFrom().iterable(transaction.getFragrances()))
+
+    private Uni<List<EmailTemplateBuilderService.ProductItem>> buildProductItems(Transaction transaction, List<TransactionFragrance> fragrances) {
+        return Multi.createFrom().iterable(transaction.getFragrances())
                 .onItem().transformToUniAndConcatenate(transactionFragrance -> {
                     FragranceSizeId fragranceSizeId = new FragranceSizeId(
                             transactionFragrance.getSize().getId(),
                             transactionFragrance.getFragrance().getId()
                     );
                     fragrances.add(transactionFragrance);
-                    return fragranceSizePanacheRepository.findById(fragranceSizeId);
-                }).invoke(fragranceSize -> items.add(new EmailTemplateBuilderService.ProductItem(fragranceSize.getImageId(),
-                        fragranceSize.getFragrance().getName(), fragrances
-                        .stream()
-                        .filter(fr -> Objects.equals(fr.getId().getFragranceId(), fragranceSize.getFragrance().getId()))
-                        .findFirst()
-                        .get().getQuantity().toString()
-                ))).collect().asList()
-                .flatMap(response -> {
-                    EmailTemplateBuilderService.CustomerInfo customerInfo = new EmailTemplateBuilderService
-                            .CustomerInfo(transaction.getFirstName(),
-                            transaction.getLastName(),
-                            transaction.getAddress(),
-                            transaction.getAdditionalAddressInfo(),
-                            transaction.getCountry(),
-                            transaction.getDepartment(),
-                            transaction.getPostalCode());
-                    String html = EmailTemplateBuilderService.buildPaidOrderHtml(transaction.getCode(),
-                            transaction.getFirstName(),
-                            items,
-                            String.valueOf(transaction.getTotalPayment()), customerInfo);
+                    return fragranceSizePanacheRepository.findById(fragranceSizeId)
+                            .invoke(fragranceSize -> fragranceSize.setStock(
+                                    fragranceSize.getStock() + transactionFragrance.getQuantity()
+                            ));
+                }).onItem().transform(fragranceSize -> new EmailTemplateBuilderService.ProductItem(
+                        fragranceSize.getImageId(),
+                        fragranceSize.getFragrance().getName(),
+                        fragrances.stream()
+                                .filter(fr -> Objects.equals(fr.getId().getFragranceId(), fragranceSize.getFragrance().getId()))
+                                .findFirst()
+                                .get()
+                                .getQuantity().toString()
+                )).collect().asList();
+    }
+
+
+    @Override
+    public Uni<Void> confirmPayment(Transaction transaction) {
+        List<TransactionFragrance> fragrances = new ArrayList<>();
+        return buildProductItems(transaction, fragrances)
+                .flatMap(items -> {
+                    EmailTemplateBuilderService.CustomerInfo customerInfo = new EmailTemplateBuilderService.CustomerInfo(
+                            transaction.getFirstName(), transaction.getLastName(), transaction.getAddress(),
+                            transaction.getAdditionalAddressInfo(), transaction.getCountry(),
+                            transaction.getDepartment(), transaction.getPostalCode()
+                    );
+                    String html = EmailTemplateBuilderService.buildPaidOrderHtml(
+                            transaction.getCode(), transaction.getFirstName(), items,
+                            String.valueOf(transaction.getTotalPayment()), customerInfo
+                    );
                     return emailRepository.send(new EmailRequestDTO(transaction.getEmail(), "Pedido Confirmado", html));
                 }).flatMap(res -> Uni.createFrom().voidItem());
+    }
+
+    @Override
+    public Uni<Void> markTransactionAsSent(Transaction transaction) {
+        List<TransactionFragrance> fragrances = new ArrayList<>();
+        return transactionPanacheRepository.update("state = ?1 where id = ?2", StateType.SENT, transaction.getId())
+                .flatMap(r -> buildProductItems(transaction, fragrances))
+                .flatMap(items -> {
+                    EmailTemplateBuilderService.CustomerInfo customerInfo = new EmailTemplateBuilderService.CustomerInfo(
+                            transaction.getFirstName(), transaction.getLastName(), transaction.getAddress(),
+                            transaction.getAdditionalAddressInfo(), transaction.getCountry(),
+                            transaction.getDepartment(), transaction.getPostalCode()
+                    );
+                    String html = EmailTemplateBuilderService.buildSentOrderHtml(
+                            transaction.getCode(), transaction.getFirstName(), items,
+                            String.valueOf(transaction.getTotalPayment()), customerInfo
+                    );
+                    return emailRepository.send(new EmailRequestDTO(transaction.getEmail(), "Pedido Enviado", html));
+                }).flatMap(res -> Uni.createFrom().voidItem());
+
     }
 
     @Override
@@ -147,6 +173,16 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
     @WithSession
     public Uni<Transaction> findById(Long idTransaction) {
         return transactionPanacheRepository.findById(idTransaction);
+    }
+
+    @Override
+    public Uni<Transaction> findByCode(String code){
+        return transactionPanacheRepository.find("code = ?1", code).firstResult();
+    }
+
+    @Override
+    public Uni<List<Transaction>> findAllByStatusAndCode(String state) {
+        return transactionPanacheRepository.find("state = ?1", StateType.valueOf(state)).list();
     }
 
 

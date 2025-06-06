@@ -2,9 +2,10 @@ package com.perfums.transactions.application.usecase.impl;
 
 import com.perfums.transactions.application.service.TransactionSchedulerService;
 import com.perfums.transactions.application.usecase.OrderUseCase;
+import com.perfums.transactions.domain.dto.OrderDTO;
 import com.perfums.transactions.domain.dto.OrderProductDTO;
 import com.perfums.transactions.domain.dto.OrderRequestDTO;
-import com.perfums.transactions.domain.dto.OrderResponseDTO;
+import com.perfums.transactions.domain.dto.OrderCodeDTO;
 import com.perfums.transactions.domain.models.PaymentCode;
 import com.perfums.transactions.domain.models.StateType;
 import com.perfums.transactions.domain.repository.ClientRepository;
@@ -24,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -55,6 +57,45 @@ public class OrderUseCaseImpl implements OrderUseCase {
 
     @ConfigProperty(name = "url.backend.domain")
     String backendDomain;
+
+    @Override
+    public Uni<List<OrderDTO>> getOrderByStatus(String status) {
+        return transactionRepository.findAllByStatusAndCode(status)
+                .map(transactions -> {
+                    List<OrderDTO> orderDTOList = new ArrayList<>();
+                    transactions.forEach(transaction -> {
+                        OrderDTO dto = new OrderDTO();
+                        dto.setClientName(transaction.getClient().getName());
+                        dto.setFirstName(transaction.getFirstName());
+                        dto.setLastName(transaction.getLastName());
+                        dto.setCodeTransaction(transaction.getCode());
+                        dto.setTotalPayment(transaction.getTotalPayment());
+                        dto.setState(transaction.getState().name());
+                        dto.setEmail(transaction.getEmail());
+                        dto.setAddress(transaction.getAddress());
+                        dto.setAdditionalAddressInfo(transaction.getAdditionalAddressInfo());
+                        dto.setPhone(transaction.getPhone());
+                        dto.setCountry(transaction.getCountry());
+                        dto.setDepartment(transaction.getDepartment());
+                        dto.setPostalCode(transaction.getPostalCode());
+                        dto.setCreateAt(transaction.getCreateAt());
+
+                        List<OrderDTO.FragranceItemDTO> fragList = new ArrayList<>();
+                        transaction.getFragrances().forEach(transactionFragrance -> {
+                            OrderDTO.FragranceItemDTO fragranceItemDTO = new OrderDTO.FragranceItemDTO();
+                            fragranceItemDTO.setName(transactionFragrance.getFragrance().getName());
+                            fragranceItemDTO.setQuantity(transactionFragrance.getQuantity());
+                            fragranceItemDTO.setSizeLabel(transactionFragrance.getSize().getSize() +
+                                    transactionFragrance.getSize().getUnit());
+                            fragList.add(fragranceItemDTO);
+                        });
+
+                        dto.setFragrances(fragList);
+                        orderDTOList.add(dto);
+                    });
+                    return orderDTOList;
+                });
+    }
 
     @Override
     public Uni<String> generateRedirectUrl(String tokenValue) {
@@ -102,6 +143,12 @@ public class OrderUseCaseImpl implements OrderUseCase {
                         }));
     }
 
+    @Override
+    public Uni<Void> sentOrder(String code){
+        return transactionRepository.findByCode(code)
+                .flatMap(transaction -> transactionRepository.markTransactionAsSent(transaction));
+    }
+
     private static String getValue(Otp otp, PaymentParameter parameter, String urlRedirect) {
         String value = parameter.getValue();
         if (PaymentCode.REDIRECT_URI.name().equals(parameter.getCode())) {
@@ -117,7 +164,7 @@ public class OrderUseCaseImpl implements OrderUseCase {
     }
 
     @Override
-    public Uni<OrderResponseDTO> processOrder(OrderRequestDTO request) {
+    public Uni<OrderCodeDTO> processOrder(OrderRequestDTO request) {
         return clientRepository.findByApiKey(request.getApiKey())
                 .flatMap(client -> {
                     log.info("Cliente encontrado para transaccion");
@@ -150,7 +197,7 @@ public class OrderUseCaseImpl implements OrderUseCase {
                                                                     .flatMap(transaction -> otpRepository.saveOtp(transaction))
                                                                     .map(otp -> {
                                                                         log.info("Se ha creado la transaccion");
-                                                                        OrderResponseDTO response = new OrderResponseDTO();
+                                                                        OrderCodeDTO response = new OrderCodeDTO();
                                                                         response.setCode(otp);
                                                                         return response;
                                                                     });

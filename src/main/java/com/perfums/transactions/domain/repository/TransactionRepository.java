@@ -22,8 +22,13 @@ public interface TransactionRepository {
 
     public Uni<Void> confirmPayment(Transaction transaction);
 
+    Uni<Void> markTransactionAsSent(Transaction transaction);
+
     Uni<Void> cancelTransactionAndRestoreStock(Long transactionId);
 
     Uni<Transaction> findById(Long idTransaction);
 
+    Uni<Transaction> findByCode(String code);
+
+    Uni<List<Transaction>> findAllByStatusAndCode(String state);
 }

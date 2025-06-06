@@ -2,7 +2,9 @@ package com.perfums.transactions.presentation;
 
 import com.perfums.transactions.application.usecase.OrderUseCase;
 import com.perfums.transactions.domain.dto.ErrorDTO;
+import com.perfums.transactions.domain.dto.OrderCodeDTO;
 import com.perfums.transactions.domain.dto.OrderRequestDTO;
+import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
@@ -12,6 +14,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
@@ -67,6 +70,32 @@ public class OrderController {
                 .recoverWithItem(throwable -> Response
                         .status(Response.Status.BAD_REQUEST)
                         .entity(new ErrorDTO("No se pudo generar la redirección: " + throwable.getMessage()))
+                        .build());
+    }
+
+    @GET
+    @Path("/paid-off")
+    @WithSession
+    public Uni<Response> getOrder(@QueryParam("state") String state) {
+        return orderUseCase.getOrderByStatus(state)
+                .map(orders -> Response.ok().entity(orders).build())
+                .onFailure()
+                .recoverWithItem(throwable -> Response
+                        .status(Response.Status.BAD_REQUEST)
+                        .entity(new ErrorDTO("Error" + throwable.getMessage()))
+                        .build());
+    }
+
+    @POST
+    @Path("/sent")
+    @WithTransaction
+    public Uni<Response> sentOrder(OrderCodeDTO orderCodeDTO) {
+        return orderUseCase.sentOrder(orderCodeDTO.getCode())
+                .map(orders -> Response.ok().build())
+                .onFailure()
+                .recoverWithItem(throwable -> Response
+                        .status(Response.Status.BAD_REQUEST)
+                        .entity(new ErrorDTO("Error" + throwable.getMessage()))
                         .build());
     }
 
